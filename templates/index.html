@@ -40,6 +40,27 @@
                 font-weight: bold;
             }
 
+            #btn-post-box1{
+                margin-right:10px;
+                border-top-left-radius: 5px;
+                border-bottom-left-radius: 5px;
+
+
+            }
+            #btn_group button{
+                border: 1px solid white;
+                background-color: black;
+                color: white;
+                margin-right: 10px;
+
+            }
+
+            #btn_group button:hover{
+                color:black;
+                background-color: lightgray;
+            }
+
+
             #post-box {
                 width: 500px;
                 margin: 20px auto;
@@ -53,7 +74,7 @@
         <script>
             $(document).ready(function () {
                 $("#cards-box").html("");
-                showArticles();
+                showDiary();
             });
 
             function openClose() {
@@ -69,35 +90,81 @@
                 }
             }
 
-            function postArticle() {
+            function postDiary() {
+                // 1. 제목, 저자, 리뷰 내용을 가져옵니다.
+                let currentDate = $("#currentDate").val();
+                let startTime = $("#startTime").val();
+                let endTime = $("#endTime").val();
+                let way = $("#way").val();
+                let comment = $("#comment").val();
+
+                // 2. 제목, 저자, 리뷰 중 하나라도 입력하지 않았을 경우 alert를 띄웁니다.
+                if (currentDate == "") {
+                    alert("날짜를 입력해주세요.");
+                    $("#currentDate").focus();
+                    return;
+                } else if (startTime == "") {
+                    alert("시작시간을 입력해주세요.");
+                    $("#startTime").focus();
+                    return;
+                } else if (endTime == "") {
+                    alert("완료시간을 입력해주세요.");
+                    $("#endTime").focus();
+                    return;
+                } else if (way == "") {
+                    alert("위치를 선택해주세요.");
+                    $("#way").focus();
+                    return;
+                }
+
+                // 3. POST /review 에 저장을 요청합니다.
                 $.ajax({
                     type: "POST",
-                    url: "/memo",
-                    data: {},
-                    success: function (response) { // 성공하면
-                        if (response["result"] == "success") {
-                            alert(response["msg"]);
-                        }
-                    }
-                })
-            }
-
-            function showArticles() {
-                $.ajax({
-                    type: "GET",
-                    url: "/memo",
-                    data: {},
+                    url: "/diary",
+                    data: {currentDate_give: currentDate, startTime_give: startTime, endTime_give: endTime, way_give: way, comment_give: comment},
                     success: function (response) {
                         if (response["result"] == "success") {
-                            alert(response["msg"]);
+                            alert(response["저장이 완료되었습니다."]);
+                            window.way.reload();
                         }
                     }
                 })
             }
 
-            function makeCard(url, title, desc, comment, image) {
-
+            function showDiary() {
+                // 1. 리뷰 목록을 서버에 요청하기
+                $.ajax({
+                    type: "GET",
+                    url: "/diary",
+                    data: {},
+                    success: function (response) {
+                        // 2. 요청 성공 여부 확인하기
+                        if (response["result"] == "success") {
+                            let diaries = response["diaries"];
+                            // 3. 요청 성공했을 때 리뷰를 올바르게 화면에 나타내기
+                            for (let i = 0; i < diaries.length; i++) {
+                                makeCard(diaries[i]["currentDate"], diaries[i]["startTime"], diaries[i]["endTime"], diaries[i]["way"], diaries[i]["comment"]);
+                            }
+                        } else {
+                            alert("정보를 가져오지 못했습니다");
+                        }
+                    }
+                })
             }
+
+            function makeCard(currentDate, startTime, endTime, way, comment) {
+                let tempHtml = `<tr>
+                        <td>${currentDate}</td>
+                        <td>${startTime}</td>
+                        <td>${endTime}</td>
+                        <td>${way}</td>
+                        <td>${comment}</td>
+                    </tr>`;
+                $("#diary-box").append(tempHtml);
+            }
+
+            document.getElementById('currentTime').value = new Date().toISOString().slice(11, 16);
+            document.getElementById('currentDate').value = new Date().toISOString().substring(0, 10);;
         </script>
 
     </head>
@@ -109,60 +176,73 @@
                 <p class="lead"> 육아기록을 할 수 있는 공간입니다</p>
                 <hr class="my-4">
                 <p class="lead">
-                    <button onclick="openClose()" id="btn-post-box" type="button" class="btn btn-primary"> 모유
+                    <div id ="btn_group">
+                    <button onclick="openClose()" id="btn-post-box1" type="button" class="btn btn-first"> 모유
                     </button>
-                    <button onclick="openClose()" id="btn-post-box" type="button" class="btn btn-primary"> 분유
+                    <button onclick="openClose()" id="btn-post-box2" type="button" class="btn btn-second"> 분유
                     </button>
-                    <button onclick="openClose()" id="btn-post-box" type="button" class="btn btn-primary"> 유축
+                    <button onclick="openClose()" id="btn-post-box3" type="button" class="btn btn-third"> 유축
                     </button>
-                    <button onclick="openClose()" id="btn-post-box" type="button" class="btn btn-primary"> 수면
+                    <button onclick="openClose()" id="btn-post-box4" type="button" class="btn btn-fourth"> 수면
                     </button>
+                    </div>
 
                 </p>
             </div>
             <div id="post-box" class="form-post" style="display:none">
                 <div>
                     <div class="form-group">
-                        <label for="post-url">아티클 URL</label>
-                        <input id="post-url" class="form-control" placeholder="">
+                        <label>날짜</label>
+                        <input type="date" id="currentDate"/>
                     </div>
                     <div class="form-group">
-                        <label for="post-comment">간단 코멘트</label>
-                        <textarea id="post-comment" class="form-control" rows="2"></textarea>
+                        <label>시작시간</label>
+                        <input type="time" id="startTime"/>
                     </div>
-                    <button type="button" class="btn btn-primary" onclick="postArticle()">기사저장</button>
+                    <div class="form-group">
+                        <label>완료시간</label>
+                        <input type="time" id="endTime"/>
+                    </div>
+                    <div class="form-group">
+                        <label>위치</label>
+                       <select id="way"> <option selected>--선택--</option>
+                           <option>왼쪽</option>
+                           <option>오른쪽</option>
+                           <option>양쪽</option>
+                           <option>모름</option> </select>
+
+                    </div>
+                    <div class="form-group">
+                        <label for="comment">메모</label>
+                        <textarea id="comment" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div id ="btn_group">
+                        <button type="button" class="btn btn-primary" onclick="postDiary()">저장</button>
+                    </div>
                 </div>
             </div>
-<table class="table">
-  <thead>
-    <tr>
-      <th scope="col">#</th>
-      <th scope="col">First</th>
-      <th scope="col">Last</th>
-      <th scope="col">Handle</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th scope="row">1</th>
-      <td>Mark</td>
-      <td>Otto</td>
-      <td>@mdo</td>
-    </tr>
-    <tr>
-      <th scope="row">2</th>
-      <td>Jacob</td>
-      <td>Thornton</td>
-      <td>@fat</td>
-    </tr>
-    <tr>
-      <th scope="row">3</th>
-      <td>Larry</td>
-      <td>the Bird</td>
-      <td>@twitter</td>
-    </tr>
-  </tbody>
-</table>
+            <div class ="diaries">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th scope="col">날짜</th>
+                    <th scope="col">시작시간</th>
+                    <th scope="col">완료시간</th>
+                    <th scope="col">위치</th>
+                    <th scope="col">메모</th>
+                </tr>
+                </thead>
+                <tbody id="diary-box">
+                <tr>
+                    <th scope="row">1</th>
+                    <td>Mark</td>
+                    <td>Otto</td>
+                    <td>@mdo</td>
+                    <td>메모</td>
+                </tr>
+                </tbody>
+            </table>
+            </div>
     </body>
 
 </html>
