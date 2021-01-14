@@ -31,8 +31,8 @@ def write_diary():
         'currentDate': currentDate_receive,
         'startTime': startTime_receive,
         'endTime': endTime_receive,
-        'way' : way_receive,
-        'comment' : comment_receive
+        'way': way_receive,
+        'comment': comment_receive
     }
     # reviews에 review 저장하기
     db.diaries.insert_one(diary)

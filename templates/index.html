@@ -125,7 +125,7 @@
                     success: function (response) {
                         if (response["result"] == "success") {
                             alert(response["저장이 완료되었습니다."]);
-                            window.way.reload();
+                            window.location.reload();
                         }
                     }
                 })
@@ -243,6 +243,7 @@
                 </tbody>
             </table>
             </div>
+        </div>
     </body>
 
 </html>
